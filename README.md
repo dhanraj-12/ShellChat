@@ -39,3 +39,11 @@ Each client connects to the server using a socket. Once connected, clients can s
 ```bash
 git clone https://github.com/your-username/chat-room-application.git
 cd chat-room-application
+
+### Step 2: Compile the Code
+
+```bash
+g++ chat_server.cpp -o chat_server -lpthread
+g++ chat_client.cpp -o chat_client
+
+
