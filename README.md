@@ -57,3 +57,15 @@ g++ chat_client.cpp -o chat_client
 ```bash
 ./chat_client
 ```
+## Known Issues
+
+- Clients may experience slight delays in message broadcasting with a large number of users.
+- Server performance can be affected by very high traffic.
+
+## Contributing
+
+Contributions are welcome! Feel free to fork the repository, make changes, and submit pull requests.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
