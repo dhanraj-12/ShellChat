@@ -3,8 +3,39 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring> // For memset
+#include<thread>
 
 using namespace std;
+
+void interactWithClient(int clientSocket,vector<int>& clients) {
+    char buffer[1024] = {0};
+
+    while(1) {
+        ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesReceived <= 0) {
+            cerr << "Failed to receive data and client disconnected" << endl;
+            close(clientSocket); 
+            break;
+        }
+        string message(buffer,bytesReceived);
+        cout << "Message from client: " << message << endl;
+
+        for(auto client : clients) {
+            if(client != clientSocket) {
+                send(client,message.c_str(), message.length(), 0);
+            }
+            
+        }
+    }
+    
+    // removing the socket which is closed
+    auto it = find(clients.begin(), clients.end(), clientSocket);
+    if(it != clients.end()) {
+        clients.erase(it);
+    }
+    // Closing sockets
+    close(clientSocket);
+}
 
 int main() {
     // Creating socket
@@ -37,27 +68,25 @@ int main() {
     cout << "Server is listening on port 8080..." << endl;
 
     // Accepting the connection request
-    int clientSocket = accept(serverSocket, nullptr, nullptr);
-    if (clientSocket == -1) {
-        cerr << "Failed to accept connection." << endl;
-        close(serverSocket);
-        return -1;
+
+    vector<int> clients;
+
+    while(1) {
+        int clientSocket = accept(serverSocket, nullptr, nullptr);
+        if (clientSocket == -1) {
+            cerr << "Failed to accept connection." << endl;
+            close(serverSocket);
+            return -1;
+        }else {
+            cout << "Client is connected" << endl;
+        }
+
+        clients.push_back(clientSocket);
+
+        thread t1(interactWithClient,clientSocket,ref(clients));
+        t1.detach();
     }
-
-    // Receiving data
-    char buffer[1024] = {0};
-    ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-    if (bytesReceived == -1) {
-        cerr << "Failed to receive data." << endl;
-        close(clientSocket);
-        close(serverSocket);
-        return -1;
-    }
-
-    cout << "Message from client: " << buffer << endl;
-
-    // Closing sockets
-    close(clientSocket);
+    
     close(serverSocket);
 
     return 0;
