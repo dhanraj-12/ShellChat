@@ -1,30 +1,41 @@
-
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>  // For inet_addr
 #include <unistd.h>
 
 int main()
 {
-    // creating socket
+    // Creating socket
     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket == -1) {
+        std::cerr << "Failed to create socket." << std::endl;
+        return -1;
+    }
 
-    // specifying address
+    // Specifying server address
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(8080);
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
+    
+    // Replace with actual server IP address, e.g., 192.168.1.5
+    serverAddress.sin_addr.s_addr = inet_addr("192.168.x.x");  // Replace x.x with the server's actual IP
 
-    // sending connection request
-    connect(clientSocket, (struct sockaddr*)&serverAddress,
-            sizeof(serverAddress));
+    // Sending connection request
+    if (connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+        std::cerr << "Connection failed." << std::endl;
+        close(clientSocket);
+        return -1;
+    }
 
-    // sending data
+    // Sending data
     const char* message = "Hello, server!";
     send(clientSocket, message, strlen(message), 0);
 
-    // closing socket
+    std::cout << "Message sent to server." << std::endl;
+
+    // Closing socket
     close(clientSocket);
 
     return 0;
