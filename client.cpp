@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>  // For inet_addr
 #include <unistd.h>
+using namespace std;
 
 int main()
 {
@@ -30,8 +31,12 @@ int main()
     }
 
     // Sending data
-    const char* message = "Hello, server!";
-    send(clientSocket, message, strlen(message), 0);
+    // const char* message = "Hello, server!";
+    string message;
+    cout << "enter the message" << endl;
+    getline(cin,message);
+
+    send(clientSocket, message.c_str(), message.size(), 0);
 
     std::cout << "Message sent to server." << std::endl;
 
