@@ -23,6 +23,7 @@ void sendmessage(int clienSocket) {
 
         if(message == "quit") {
             cout << "stopping the application..." << endl;
+            close(clienSocket);
             break;  
         }
     }
