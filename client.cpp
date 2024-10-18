@@ -70,7 +70,7 @@ int main()
     serverAddress.sin_port = htons(8080);
     
     // Replace with actual server IP address, e.g., 192.168.1.5
-    serverAddress.sin_addr.s_addr = inet_addr("x.x.x.x");  // Replace x.x with the server's actual IP
+    serverAddress.sin_addr.s_addr = inet_addr("54.198.128.253");  // Replace x.x with the server's actual IP
 
     // serverAddress.sin_addr.s_addr = INADDR_ANY;
 
