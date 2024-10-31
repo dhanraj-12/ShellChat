@@ -35,41 +35,85 @@ string CeaserDecrypt(const string& message,int shift) {
 }  
 
 string shift_to_binary(int shift) {
+   // Ensure the shift value is within valid range (0-15)
+    shift = shift & 0xF;  // Mask to 4 bits
     return bitset<4>(shift).to_string();
 }
 
 int binary_to_shift(const string& binary) {
+    // Validate binary string length and content
+    if (binary.length() != 4) {
+        throw runtime_error("Invalid binary string length");
+    }
+    for (char c : binary) {
+        if (c != '0' && c != '1') {
+            throw runtime_error("Invalid binary character");
+        }
+    }
     return bitset<4>(binary).to_ulong();
 }
 
+bool inChatMode = false;
+string username;
+mutex cout_mutex;
+bool waitingForUsername = false;
+
 
 void sendmessage(int clienSocket) {
-    cout << "Enter your Chatname" << endl;
-    string name;
-    getline(cin, name);
-    string message;                                                                                                                                            
+     string message;
+    
+    // Wait for initial system messages
+    this_thread::sleep_for(chrono::milliseconds(500));                                                                                                                                           
     while(1) {
+        
+        if(username.empty() && inChatMode) {
+            {
+                lock_guard<mutex> lock(cout_mutex);
+                waitingForUsername = true;
+                cout << "\033[1;32mEnter your username: \033[0m";
+            }
+            
+            getline(cin, username);
+            
+            {
+                lock_guard<mutex> lock(cout_mutex);
+                waitingForUsername = false;
+                while(username.empty()) {
+                    cout << "\033[1;31mUsername cannot be empty. Please enter your username: \033[0m";
+                    getline(cin, username);
+                }
+                cout << "\033[1;32mWelcome, " << username << "! You can now start sending messages.\033[0m" << endl;
+            }
+            continue;
+        }
+
+
         getline(cin, message);
-        string msg = name + ":" + message;
-        // seeding rand function using time
-        srand(time(0));
-        int shift = rand() % 12 + 1; 
-        // encrypting message
-        string encryptmsg = CeaserEncrypt(msg,shift); 
-        // converting shift to binary_string
-        string binaryshift = shift_to_binary(shift);
-        // passing the decrypting key with the message;
-        string msgtosend = binaryshift+encryptmsg;
-        int bytesend = send(clienSocket,msgtosend.c_str(),msgtosend.size(),0);
-        if(bytesend == -1) {
-            cerr << "error while sending the application" << endl;
+
+        if(message == "quit") {
+            cout << "Stopping the application..." << endl;
+            close(clienSocket);
             break;
         }
 
-        if(message == "quit") {
-            cout << "stopping the application..." << endl;
-            close(clienSocket);
-            break;  
+
+        string msgtosend;
+        if(!inChatMode) {
+            msgtosend = message;
+        } else {
+            string msg = username + ": " + message;
+            srand(time(0));
+            int shift = rand() % 12 + 1;
+            string encryptmsg = CeaserEncrypt(msg, shift);
+            string binaryshift = shift_to_binary(shift);
+            msgtosend = "MSG:" + binaryshift + encryptmsg;
+        }
+
+         
+        int bytesend = send(clienSocket, msgtosend.c_str(), msgtosend.size(), 0);
+        if(bytesend == -1) {
+            cerr << "Error while sending the message" << endl;
+            break;
         }
     }
 
@@ -81,27 +125,46 @@ void recievemessage(int clientSocket) {
 
     char buffer[1024] = {0};
     ssize_t recvlen;
-    string msg;
+
     while(1) {
         recvlen = recv(clientSocket,buffer,sizeof(buffer),0);
         if(recvlen <= 0) {
             cerr << "dissconnect from the server" << endl;
             break;
-        }else {
-            msg = string(buffer,recvlen);
-            // extracting binary string 
-            string binarystring  = msg.substr(0,4);
-            // converting the string string to key or sift;
-            int key = binary_to_shift(binarystring);
-            // extracting the encrypted msg
-            string encryptedmsg = msg.substr(4);
-            // decrypting the msg
-            string decryptedmsg = CeaserDecrypt(encryptedmsg,key);
-
-            cout << decryptedmsg << endl;
-
         }
+        string msg(buffer, recvlen);
+        memset(buffer, 0, sizeof(buffer));
 
+         if(msg.substr(0, 4) == "SYS:") {
+            cout << "\033[1;33m" << msg.substr(4) << "\033[0m" << endl;
+            
+            if(msg.find("Successfully joined") != string::npos || 
+               msg.find("Created new public room") != string::npos ||
+               msg.find("Joined existing room") != string::npos) {
+                inChatMode = true;
+                cout << "\033[1;32m" << "Entered chat mode - messages will now be encrypted" << "\033[0m" << endl;
+                
+              
+            }
+        } else if(msg.substr(0, 4) == "MSG:" && msg.length() >= 8) {
+            try {
+                string binaryshift = msg.substr(4, 4);  // Changed from 8 to 4
+                int key = binary_to_shift(binaryshift);
+                string encryptedmsg = msg.substr(8);
+                string decryptedmsg = CeaserDecrypt(encryptedmsg, key);
+                cout << "\033[1;37m" << decryptedmsg << "\033[0m" << endl;
+            } catch(const exception& e) {
+                cerr << "Error decrypting message: " << e.what() << endl;
+                // Print debug information
+                cout << "Debug - Full message: " << msg << endl;
+                cout << "Debug - Message length: " << msg.length() << endl;
+                if (msg.length() >= 8) {
+                    cout << "Debug - Binary portion: " << msg.substr(4, 4) << endl;
+                }
+            }
+        } else {
+            cout << msg << endl;
+        }
         
     }
     close(clientSocket);
