@@ -22,7 +22,7 @@ The **Chat Room Application** is a simple multi-client chatroom built entirely i
 
 The following diagram shows the architecture of the Chat Room Application, illustrating the flow of creating and joining public and private rooms:
 
-![Chat Room Architecture](Chat_Room/arch.png)
+![Chat Room Architecture](arch.png)
 
 ## How it Works
 
