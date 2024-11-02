@@ -18,6 +18,12 @@ The **Chat Room Application** is a simple multi-client chatroom built entirely i
 - **C++ Standard Library Sockets** (`<sys/socket.h>`, `<netinet/in.h>`, etc.)
 - **Multithreading** with the C++ Standard Library's `thread`
 
+## Architecture
+
+The following diagram shows the architecture of the Chat Room Application, illustrating the flow of creating and joining public and private rooms:
+
+![Chat Room Architecture](Chat_Room/arch.png)
+
 ## How it Works
 
 ### Server
