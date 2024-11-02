@@ -7,7 +7,9 @@ The **Chat Room Application** is a simple multi-client chatroom built entirely i
 ## Features
 
 - **Multiple Clients**: Supports multiple users chatting concurrently.
-- **Message Broadcasting**: Messages from one client are sent to all other connected clients.
+- **Public and Private Room Mechanism**: Users can join public rooms freely or create their own public or private chat rooms.
+- **Room Selection and Creation**: Users can select from available public rooms or create a new room. Private rooms require a unique private key for access, which must be shared by the room creator.
+- **Message Broadcasting**: Messages from one client are sent to all other connected clients within the same room.
 - **Threaded Client Handling**: Each client is managed in its own thread for smooth communication.
 - **Client Disconnection Handling**: Removes disconnected clients and continues broadcasting messages for active users.
 
@@ -43,19 +45,19 @@ cd chat-room-application
 ### Step 2: Compile the Code
 
 ```bash
-g++ chat_server.cpp -o chat_server -lpthread
-g++ chat_client.cpp -o chat_client
+g++ server.cpp -o server -lpthread
+g++ client.cpp -o client
 ```
 
 ### Step 3: Run the Server
 
 ```bash
-./chat_server
+./server
 ```
 
 ### Step 4:  Run the Client
 ```bash
-./chat_client
+./client
 ```
 ## Known Issues
 
